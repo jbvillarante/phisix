@@ -1,0 +1,26 @@
+#!/usr/bin/env ruby
+#
+#
+
+PSE_ENDPOINT = 'http://www.pse.com.ph/html/MarketInformation/indexcomposition.jsp?sector=ALL'
+
+def get_quotes
+	raw_response = Curl::Easy.http_post(PSE_ENDPOINT)
+	response = raw_response.body_str
+	quotes = []
+	response.split('<tr height=15 class="bgcolor_8">').each_with_index do |security, index|
+		next if index == 0
+		quotes[index] = []
+		security.split('class="txt_1">').each_with_index do |sfield, sindex|
+			next if sindex == 0
+			content = "#{$1}" if sfield =~ /^(.*)<\/span>/
+			content = "#{$1}" if content =~ /securitySymbol=(.*)">/
+			content.gsub!('&nbsp;', '') rescue nil
+			quotes[index] << content
+		end
+	end
+	quotes
+end
+
+#TODO: Persist in Database
+p get_quotes
